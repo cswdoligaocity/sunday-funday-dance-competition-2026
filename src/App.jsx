@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { BookOpen, X, ChevronRight, ChevronLeft, Plus, Trash2, Users, Building2, Video, ShieldCheck } from 'lucide-react'
 import './styles.css'
+import Admin from './Admin.jsx'
 
 const supabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
   ? createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY) : null
@@ -14,6 +15,8 @@ const age = d => { if(!d)return ''; const b=new Date(d+'T00:00:00'),n=new Date()
 const drive = s => /^https:\/\/(drive\.google\.com|docs\.google\.com)\//i.test(s.trim())
 
 export default function App(){
+ const [route,setRoute]=useState(window.location.hash)
+ useEffect(()=>{const onHash=()=>setRoute(window.location.hash);window.addEventListener('hashchange',onHash);return()=>window.removeEventListener('hashchange',onHash)},[])
  const [f,S]=useState(initial),[step,T]=useState(0),[loc,L]=useState([]),[br,B]=useState({}),[showMechanics,M]=useState(false),[err,E]=useState(''),[busy,Q]=useState(false),[done,D]=useState('')
  useEffect(()=>{ if(supabase) supabase.from('albay_localities').select('id,name').order('name').then(({data,error})=>{if(error)E(error.message);else L(data||[])}) },[])
  const locality = name=>loc.find(x=>x.name===name)
@@ -33,7 +36,8 @@ export default function App(){
  const {data,error}=await supabase.rpc('submit_competition_application',{p_data:payload});Q(false);if(error)E(error.message);else{D(data.reference_number);S(initial);T(0)}
  }
  const names=['Group Information','Participant Roster','Audition Video','Review & Consent'], icons=[Building2,Users,Video,ShieldCheck]
- return <div className="shell"><header><div className="identity"><img src={`${import.meta.env.BASE_URL}logo.png`} onError={e=>e.currentTarget.style.display='none'} alt="City Government of Ligao seal"/><div><b>CITY GOVERNMENT OF LIGAO</b><small>ALBAY, PHILIPPINES</small></div></div><button className="mechanics-btn" onClick={()=>M(true)}><BookOpen size={17}/> General Mechanics</button></header>
+ if(route==='#admin') return <Admin/>
+ return <div className="shell"><header><div className="identity"><img src={`${import.meta.env.BASE_URL}logo.png`} onError={e=>e.currentTarget.style.display='none'} alt="City Government of Ligao seal"/><div><b>CITY GOVERNMENT OF LIGAO</b><small>ALBAY, PHILIPPINES</small></div></div><div className="header-actions"><a className="admin-link" href="#admin">Admin</a><button className="mechanics-btn" onClick={()=>M(true)}><BookOpen size={17}/> General Mechanics</button></div></header>
  <main><section className="hero"><small>2026 • OFFICIAL REGISTRATION PORTAL</small><h1>Sunday Funday<br/><em>Dance Competition</em></h1><p>Register your group and submit your audition video.</p><div className="tags">HIP-HOP <span>•</span> DANCESPORT <span>•</span> TIKTOK MASHUP</div></section>
  {done?<section className="card success"><h2>Registration submitted!</h2><p>Save your application reference number.</p><strong>{done}</strong><button onClick={()=>D('')}>Register another group</button></section>:<section className="card"><div className="cardtop"><div><small>TEAM REGISTRATION</small><h2>Register your group</h2><p>Complete the four steps below.</p></div><b>STEP {step+1} OF 4</b></div><div className="progress"><i style={{width:`${(step+1)*25}%`}}/></div><nav>{names.map((n,i)=><span className={i===step?'active':i<step?'passed':''} key={n}>{i+1}. {n}</span>)}</nav>
  <h3>{names[step]}</h3>
